@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>이지 코칭 | v13.1 ELITE</title>
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* [v11.0] THEME ENGINE */
+        :root {
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --bg: #000000;
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text: #f8fafc;
+            --text-dim: #64748b;
+            --chart-grid: rgba(255, 255, 255, 0.03);
+            --shadow: 0 20px 50px rgba(0,0,0,1);
+        }
+        body.light-mode {
+            --bg: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(0, 0, 0, 0.08);
+            --text: #0f172a;
+            --text-dim: #64748b;
+            --chart-grid: rgba(0, 0, 0, 0.05);
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        body { font-family: 'Noto Sans KR', 'Outfit', sans-serif; background-color: var(--bg); color: var(--text); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; margin: 0; padding: 0; user-select: none; }
+        .glass { background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid var(--card-border); transition: inherit; }
+        .gradient-text { background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        #app-container { display: flex; flex-direction: column; min-height: 100vh; width: 100vw; max-width: 800px; margin: 0 auto; overflow-y: auto; padding: 1.25rem; padding-bottom: 12rem; position: relative; }
+        header { margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--card-border); }
+        
+        /* THEME TOGGLE BUTTON */
+        #themeToggle { width: 44px; height: 24px; border-radius: 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); position: relative; cursor: pointer; display: flex; align-items: center; padding: 2px; }
+        #themeToggle::after { content: ''; width: 18px; height: 18px; border-radius: 50%; background: var(--primary); transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 0 10px var(--primary); }
+        .light-mode #themeToggle::after { transform: translateX(20px); background: var(--secondary); box-shadow: 0 0 10px var(--secondary); }
+
+        /* ELITE VISUAL AREA [v11.4 Slimmed] */
+        .visual-area { display: flex; flex-direction: row; gap: 1rem; align-items: stretch; width: 100%; min-height: 200px; }
+        .camera-frame { flex: 1.6; border: 2px solid var(--card-border); border-radius: 2rem; position: relative; overflow: hidden; background: #000; aspect-ratio: 16 / 9; box-shadow: var(--shadow); }
+        
+        /* Elite Coach Container */
+        .guide-container { flex: 1.4; display: flex; flex-direction: column; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 2rem; padding: 0.75rem; min-width: 180px; box-shadow: var(--shadow); }
+        
+        /* Compact Timer Boxes */
+        .timers-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.4rem; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--card-border); }
+        .timer-box { background: rgba(0,0,0,0.03); border: 1px solid var(--card-border); border-radius: 0.8rem; padding: 0.3rem; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+        .timer-label { font-size: 8px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 1px; }
+        .arrow-btn { background: rgba(0, 242, 255, 0.1); border: 1px solid var(--card-border); border-radius: 6px; width: 22px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--primary); cursor: pointer; transition: 0.2s; }
+        .arrow-btn:active { transform: scale(0.9); background: var(--primary); color: #000; }
+        .time-display { font-size: 13px; font-weight: 900; color: var(--text); font-family: 'JetBrains Mono'; margin: 1px 0; }
+
+        /* Ultra-Large Breathing Circle (Bottom) */
+        .circle-ui-container { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; min-height: 140px; }
+        .circle { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.8); width: 80px; height: 80px; background-color: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #000; font-size: 13px; font-weight: 950; box-shadow: 0 0 40px var(--primary); z-index: 10; transition: background-color 0.5s ease, opacity 0.5s ease; }
+        .max-circle-outline { position: absolute; width: 140px; height: 140px; border: 1.5px dashed var(--text-dim); border-radius: 50%; z-index: 1; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0.3; }
+        .min-circle-outline { position: absolute; width: 70px; height: 70px; border: 1.5px dashed var(--text-dim); border-radius: 50%; z-index: 1; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0.3; }
+
+        /* [v19.1] ENHANCED CHART AREA */
+        .chart-container { height: 550px; min-height: 450px; width: 100%; margin: 1rem 0; padding: 1.25rem; border-radius: 2.5rem; border: 1px solid var(--card-border); background: var(--card-bg); box-shadow: var(--shadow); }
+
+        /* [v11.2] SLIM FIXED CONTROLS */
+        #controls { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 800px; padding: 0.75rem 1.25rem; background: var(--card-bg); backdrop-filter: blur(40px); border-top: 1px solid var(--card-border); z-index: 3000; box-shadow: 0 -20px 80px rgba(0,0,0,0.4); }
+        .action-btn { flex: 1; border-radius: 1.25rem; font-weight: 900; text-transform: uppercase; transition: all 0.3s ease; font-size: 13px; letter-spacing: 0.05em; border: 1px solid rgba(255,255,255,0.05); padding: 0.7rem 0; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #00d2df); color: #000; box-shadow: 0 10px 30px rgba(0,242,255,0.3); }
+        .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--card-border); }
+        .btn-primary:active { transform: translateY(2px) scale(0.98); box-shadow: 0 5px 15px rgba(0,242,255,0.2); }
+        
+        input[type=range] { -webkit-appearance: none; background: rgba(0,0,0,0.1); height: 10px; border-radius: 5px; width: 100%; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 36px; width: 36px; border-radius: 50%; background: #fff; box-shadow: 0 0 30px var(--primary); transform: translateY(-35%); cursor: pointer; border: 2px solid var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <header class="flex justify-between items-center">
+            <h1 class="text-2xl font-black uppercase tracking-tighter">이지 <span class="gradient-text">코칭</span></h1>
+            <div class="flex items-center gap-4">
+                <div id="voiceToggle" onclick="toggleVoice()" class="cursor-pointer text-xl" title="음성 안내">🔊</div>
+                <div id="themeToggle" onclick="toggleTheme()" title="테마 전환"></div>
+                <div class="flex items-center gap-2 text-primary font-black text-[10px] uppercase">
+                    <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    <span id="phaseLabel">실시간 모니터링</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ELITE FOCUS AREA -->
+        <div class="visual-area">
+            <div id="cameraArea" class="camera-frame">
+                <video id="video" muted autoplay playsinline style="transform: scaleX(-1); object-fit: fill;" class="absolute inset-0 w-full h-full z-10"></video>
+                <canvas id="overlay" width="1280" height="720" class="absolute inset-0 w-full h-full z-20 cursor-crosshair touch-none"></canvas>
+            </div>
+
+            <!-- Focus Coach Module -->
+            <div class="guide-container">
+                <div class="timers-grid">
+                    <div class="timer-box">
+                        <button class="arrow-btn" onclick="changeTime('inhale', 1)">▲</button>
+                        <div class="timer-label">들이쉬기</div>
+                        <div id="inhaleTime" class="time-display">4.0</div>
+                        <button class="arrow-btn" onclick="changeTime('inhale', -1)">▼</button>
+                    </div>
+                    <div class="timer-box">
+                        <button class="arrow-btn" onclick="changeTime('hold', 1)">▲</button>
+                        <div class="timer-label">참기</div>
+                        <div id="holdTime" class="time-display">2.0</div>
+                        <button class="arrow-btn" onclick="changeTime('hold', -1)">▼</button>
+                    </div>
+                    <div class="timer-box">
+                        <button class="arrow-btn" onclick="changeTime('exhale', 1)">▲</button>
+                        <div class="timer-label">내쉬기</div>
+                        <div id="exhaleTime" class="time-display">4.0</div>
+                        <button class="arrow-btn" onclick="changeTime('exhale', -1)">▼</button>
+                    </div>
+                    <div class="timer-box">
+                        <button class="arrow-btn" onclick="changeTime('prepare', 1)">▲</button>
+                        <div class="timer-label">준비</div>
+                        <div id="prepareTime" class="time-display">1.0</div>
+                        <button class="arrow-btn" onclick="changeTime('prepare', -1)">▼</button>
+                    </div>
+                </div>
+
+                <div class="circle-ui-container">
+                    <div class="max-circle-outline"></div>
+                    <div class="min-circle-outline"></div>
+                    <div id="circle" class="circle">준비</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Waveform Center -->
+        <div class="chart-container">
+            <div class="flex justify-between items-center mb-6 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <span>실시간 바이오-싱크 데이터 v11.0</span>
+                <div class="flex gap-4">
+                    <span class="text-primary">• 실제 호흡</span>
+                    <span style="color: #ff9f0a;">• 목표 파형</span>
+                </div>
+            </div>
+            <div class="flex-1 min-h-0"><canvas id="chartY"></canvas></div>
+        </div>
+
+        <!-- System Controls -->
+        <div id="controls">
+            <div class="flex gap-4 mb-4">
+                <button id="btnStart" class="action-btn btn-primary py-4">세션 시작</button>
+                <button id="btnReset" class="action-btn btn-secondary py-4">영역 초기화</button>
+            </div>
+            <div class="grid grid-cols-1 gap-4">
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[10px] font-black uppercase text-slate-500">
+                        <span>목표 진폭 <span class="opacity-30">(AMP)</span></span>
+                        <span id="valA" class="text-primary">1.00</span>
+                    </div>
+                    <input type="range" id="inputA" min="10" max="150" value="100">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="pCanvas" width="320" height="180" class="hidden"></canvas>
+
+    <script>
+        const state = {
+            isTracking: false, speed: 3, smoothing: 0.90, amplitude: 1.0, 
+            useVoice: true, lastSpokenPhase: -1, roi: null,
+            targetWave: 0.5, currentPhase: 0, theme: 'dark',
+            config: { inhale: 4.0, hold: 2.0, exhale: 4.0, prepare: 1.0 },
+            smoothed: { y: 0.5 }, frameCount: 0, phaseStartTime: 0,
+            actualHistory: Array(800).fill(0.5)
+        };
+
+        const dom = {
+            video: document.getElementById('video'), overlay: document.getElementById('overlay'), pCanvas: document.getElementById('pCanvas'),
+            btnStart: document.getElementById('btnStart'), btnReset: document.getElementById('btnReset'),
+            circle: document.getElementById('circle'), pLabel: document.getElementById('phaseLabel'),
+            inIn: document.getElementById('inhaleTime'), inH: document.getElementById('holdTime'), inEx: document.getElementById('exhaleTime'), inPr: document.getElementById('prepareTime'),
+            valA: document.getElementById('valA'), inA: document.getElementById('inputA')
+        };
+
+        let chartY = null;
+        function initCharts() {
+            const ctx = document.getElementById('chartY').getContext('2d');
+            const gridColor = getComputedStyle(document.body).getPropertyValue('--chart-grid').trim();
+            chartY = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(800).fill(''),
+                    datasets: [
+                        { label: 'Actual', data: Array(800).fill(0.5), borderColor: '#00f2ff', borderWidth: 8, pointRadius: 0, fill: false, tension: 0.4, z: 2 },
+                        { label: 'Target', data: Array(800).fill(0.5), borderColor: '#ff9f0a', borderWidth: 5, pointRadius: 0, fill: false, tension: 0.5, z: 1 },
+                        { label: 'Top', data: Array(800).fill(1.0), borderColor: '#ff9f0a', borderWidth: 2, borderDash: [10, 5], pointRadius: 0, fill: false, tension: 0, z: 0 },
+                        { label: 'Bottom', data: Array(800).fill(0.0), borderColor: '#ff9f0a', borderWidth: 2, borderDash: [10, 5], pointRadius: 0, fill: false, tension: 0, z: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, animation: false,
+                    scales: { 
+                        x: { display: false }, 
+                        y: { 
+                            min: -0.1, max: 1.1, position: 'right', 
+                            grid: { color: gridColor }, 
+                            ticks: { display: false } 
+                        } 
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function toggleVoice() {
+            state.useVoice = !state.useVoice;
+            document.getElementById('voiceToggle').innerText = state.useVoice ? "🔊" : "🔇";
+        }
+
+        function speak(text) {
+            if (!state.useVoice || !text) return;
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'ko-KR';
+            msg.rate = 1.1;
+            msg.volume = 1.0;
+            window.speechSynthesis.speak(msg);
+        }
+
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light-mode');
+            state.theme = isLight ? 'light' : 'dark';
+            const gridColor = getComputedStyle(document.body).getPropertyValue('--chart-grid').trim();
+            chartY.options.scales.y.grid.color = gridColor;
+            chartY.update('none');
+        }
+
+        const vibrate = (p) => { if ("vibrate" in navigator) navigator.vibrate(p); };
+        const changeTime = (t, d) => {
+            state.config[t] = Math.max(t === 'hold' || t === 'prepare' ? 0 : 0.5, Math.round((state.config[t] + d * 0.5) * 10) / 10);
+            dom.inIn.innerText = state.config.inhale.toFixed(1); dom.inH.innerText = state.config.hold.toFixed(1);
+            dom.inEx.innerText = state.config.exhale.toFixed(1); dom.inPr.innerText = state.config.prepare.toFixed(1);
+        };
+
+        async function start() {
+            try {
+                // Unlock Voice Engine for Mobile
+                if (state.useVoice) {
+                    const unlock = new SpeechSynthesisUtterance("");
+                    window.speechSynthesis.speak(unlock);
+                }
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'environment' } });
+                dom.video.srcObject = stream;
+                dom.video.onloadedmetadata = () => {
+                    dom.video.play();
+                    state.isTracking = true;
+                    state.phaseStartTime = Date.now();
+                    state.currentPhase = state.config.prepare > 0 ? 0 : 1; 
+                    dom.btnStart.innerText = "세션 종료"; dom.btnStart.style.background = "#ef4444";
+                    requestAnimationFrame(loop);
+                };
+            } catch (e) { alert("카메라 접근 권한이 필요합니다."); }
+        }
+
+        function stop() {
+            state.isTracking = false; if (dom.video.srcObject) dom.video.srcObject.getTracks().forEach(t => t.stop());
+            dom.btnStart.innerText = "세션 시작"; dom.btnStart.style.background = "linear-gradient(135deg, var(--primary), #00d2df)";
+            dom.circle.style.transform = "translate(-50%, -50%) scale(1.0)"; 
+            dom.circle.innerText = "준비";
+            dom.pLabel.innerText = "실시간 모니터링";
+        }
+
+        function updateSequencer() {
+            if (!state.isTracking) return;
+            const elapsed = (Date.now() - state.phaseStartTime) / 1000;
+            let d = 0, t = "", c = "", wave = 0;
+
+            if (state.currentPhase !== state.lastSpokenPhase) {
+                const phaseNames = ["준비하세요", "들이쉬세요", "참으세요", "내쉬세요"];
+                speak(phaseNames[state.currentPhase]);
+                state.lastSpokenPhase = state.currentPhase;
+            }
+
+            if (state.currentPhase === 0) {
+                d = state.config.prepare; t = "준비"; c = "#94a3b8"; wave = 0;
+                if (elapsed >= d) { state.currentPhase = 1; state.phaseStartTime = Date.now(); vibrate([100, 50, 100]); }
+            } else if (state.currentPhase === 1) {
+                d = state.config.inhale; t = "들이쉬기"; c = "#10b981"; 
+                wave = (1 - Math.cos(Math.PI * Math.min(1.0, elapsed / d))) / 2;
+                if (elapsed >= d) { state.currentPhase = 2; state.phaseStartTime = Date.now(); vibrate([300]); }
+            } else if (state.currentPhase === 2) {
+                d = state.config.hold; t = "참기"; c = "#f59e0b"; wave = 1.0;
+                if (elapsed >= d) { state.currentPhase = 3; state.phaseStartTime = Date.now(); vibrate([80, 50, 80]); }
+            } else if (state.currentPhase === 3) {
+                d = state.config.exhale; t = "내쉬기"; c = "#ef4444"; 
+                wave = (1 + Math.cos(Math.PI * Math.min(1.0, elapsed / d))) / 2;
+                if (elapsed >= d) { state.currentPhase = 0; state.phaseStartTime = Date.now(); vibrate([100, 50, 100]); }
+            }
+
+            // v14.0: APPLY AMPLITUDE SCALING (Scale around 0.5 baseline)
+            state.targetWave = 0.5 + (wave - 0.5) * state.amplitude;
+
+            dom.circle.style.backgroundColor = c;
+            dom.circle.innerText = t;
+            // Guide circle also reflects the adjusted amplitude
+            dom.circle.style.transform = `translate(-50%, -50%) scale(${1.0 + state.targetWave * 1.0})`; 
+            dom.pLabel.innerText = `${t} (${Math.max(0, d - elapsed).toFixed(1)}초)`;
+        }
+
+        const getPos = (e) => { if (e.cancelable) e.preventDefault(); const r = dom.overlay.getBoundingClientRect(); const cx = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX; const cy = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY; return { x: (cx - r.left) / r.width, y: (cy - r.top) / r.height }; };
+        const onS = (e) => { state.dragStart = getPos(e); state.tempRoi = null; };
+        const onM = (e) => { if (state.dragStart) { const curr = getPos(e); state.tempRoi = { x: Math.min(state.dragStart.x, curr.x), y: Math.min(state.dragStart.y, curr.y), w: Math.max(0.01, Math.abs(state.dragStart.x - curr.x)), h: Math.max(0.01, Math.abs(state.dragStart.y - curr.y)) }; } };
+        const onE = () => { if (state.tempRoi) state.roi = state.tempRoi; state.dragStart = null; state.tempRoi = null; };
+        dom.overlay.addEventListener('mousedown', onS); dom.overlay.addEventListener('mousemove', onM); window.addEventListener('mouseup', onE);
+        dom.overlay.addEventListener('touchstart', onS, {passive:false}); dom.overlay.addEventListener('touchmove', onM, {passive:false}); dom.overlay.addEventListener('touchend', onE);
+
+        function loop() {
+            const oCtx = dom.overlay.getContext('2d'); oCtx.clearRect(0,0,1280,720);
+            const active = state.tempRoi || state.roi;
+            if (active) { oCtx.strokeStyle='#ff4b4b'; oCtx.lineWidth=6; oCtx.setLineDash([15, 8]); oCtx.strokeRect(active.x*1280, active.y*720, active.w*1280, active.h*720); oCtx.setLineDash([]); }
+            
+            if (!state.isTracking) { requestAnimationFrame(loop); return; }
+            updateSequencer();
+
+            const pCtx = dom.pCanvas.getContext('2d', { willReadFrequently: true }); pCtx.drawImage(dom.video, 0, 0, 320, 180);
+            const data = pCtx.getImageData(0, 0, 320, 180).data;
+            let sX0=0, sX1=320, sY0=0, sY1=180;
+            if (state.roi) { sX0 = Math.floor((1-(state.roi.x+state.roi.w))*320); sX1 = Math.floor((1-state.roi.x)*320); sY0 = Math.floor(state.roi.y*180); sY1 = Math.floor((state.roi.y+state.roi.h)*180); }
+            
+            let minB = 255; for (let y=sY0; y<sY1; y++) { for (let x=sX0; x<sX1; x++) { const i = (y*320+x)*4; const b = (data[i]+data[i+1]+data[i+2])/3; if (b < minB) minB = b; }}
+            let sX=0, sY=0, totalW=0; const thresh = Math.min(130, minB+10); // v12.3: Hyper-Core Focus
+            for (let i=0; i<data.length; i+=4) {
+                const px=(i/4)%320, py=Math.floor((i/4)/320), b=(data[i]+data[i+1]+data[i+2])/3;
+                if (px>=sX0 && px<=sX1 && py>=sY0 && py<=sY1 && b<thresh) { 
+                    // v12.3: Magnetic Delta Weighting (Delta^4) 
+                    // This creates a 'gravity well' at the absolute darkest spot
+                    const w = Math.pow(thresh - b, 4); 
+                    sX += px*w; sY += py*w; totalW += w; 
+                }
+            }
+            
+            if (totalW > 0) {
+                // v12.4: Dual-Axis Smoothing (Focus on Y for signal, X for visual lock)
+                state.smoothed.y = state.smoothed.y * (1-SmoothingAlpha()) + (sY/totalW/180) * SmoothingAlpha();
+                if (!state.smoothed.x) state.smoothed.x = sX/totalW/320;
+                state.smoothed.x = state.smoothed.x * 0.9 + (sX/totalW/320) * 0.1;
+
+                if (++state.frameCount % state.speed === 0) {
+                    const actualVal = 1 - state.smoothed.y;
+                    state.actualHistory.push(actualVal); state.actualHistory.shift();
+                    
+                    // v17.0: FIXED Precision Guidelines 
+                    const REF_SCALE = 0.20; // Natural breath height reference
+                    let minR = 1, maxR = 0;
+                    for(let i=0; i<800; i++) {
+                        if(state.actualHistory[i] < minR) minR = state.actualHistory[i];
+                        if(state.actualHistory[i] > maxR) maxR = state.actualHistory[i];
+                    }
+                    const midR = (maxR + minR) / 2;
+
+                    // Manual Guideline Logic
+                    const goalTop = 0.5 + (0.5 * state.amplitude);
+                    const goalBottom = 0.5 - (0.5 * state.amplitude);
+
+                    // Unified Scaling (Natural Proportion)
+                    const normalizedActual = (actualVal - midR) / REF_SCALE + 0.5;
+                    const targetDisplayWave = 0.5 + (state.targetWave - 0.5) * state.amplitude;
+
+                    chartY.data.datasets[0].data.push(normalizedActual);
+                    chartY.data.datasets[1].data.push(targetDisplayWave);
+                    chartY.data.datasets[2].data.push(goalTop);
+                    chartY.data.datasets[3].data.push(goalBottom);
+
+                    chartY.data.datasets[0].data.shift();
+                    chartY.data.datasets[1].data.shift();
+                    chartY.data.datasets[2].data.shift();
+                    chartY.data.datasets[3].data.shift();
+                    
+                    // v19.2: Adaptive Chart Scaling (Auto-Zoom)
+                    // Dynamically adjust Y-axis to fill the empty space based on amplitude
+                    // v20.1: Uncapped Adaptive Chart Scaling
+                    // Remove limits to ensure guidelines are never clipped when amplitude is high
+                    const zoomPadding = 0.20; 
+                    const targetMax = 0.5 + (0.5 * state.amplitude) + zoomPadding;
+                    const targetMin = 0.5 - (0.5 * state.amplitude) - zoomPadding;
+                    chartY.options.scales.y.max = targetMax;
+                    chartY.options.scales.y.min = targetMin;
+
+                    chartY.update('none');
+                }
+                const oCtx = dom.overlay.getContext('2d');
+                // v12.4: OMNI LOCK - Follow dot on both axes with horizontal damping
+                const vx = (1 - state.smoothed.x) * 1280; 
+                const vy = state.smoothed.y * 720;
+                
+                oCtx.beginPath(); oCtx.arc(vx, vy, 15, 0, Math.PI*2); oCtx.strokeStyle='#00f2ff'; oCtx.lineWidth=6; oCtx.stroke();
+            }
+            requestAnimationFrame(loop);
+        }
+
+        const SmoothingAlpha = () => 1 - state.smoothing;
+        dom.btnStart.onclick = () => state.isTracking ? stop() : start();
+        dom.btnReset.onclick = () => { state.roi = null; };
+        dom.inA.oninput = (e) => { 
+            state.amplitude = e.target.value/100; 
+            dom.valA.innerText = state.amplitude.toFixed(2); 
+        };
+        initCharts();
+        requestAnimationFrame(loop);
+    </script>
+</body>
+</html>
