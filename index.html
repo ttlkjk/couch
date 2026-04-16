@@ -151,9 +151,10 @@
 
         <!-- System Controls -->
         <div id="controls">
-            <div class="flex gap-4 mb-4">
-                <button id="btnStart" class="action-btn btn-primary py-4">세션 시작</button>
-                <button id="btnReset" class="action-btn btn-secondary py-4">영역 초기화</button>
+            <div class="flex gap-2 mb-4">
+                <button id="btnStart" class="action-btn btn-primary py-4" style="flex: 2;">세션 시작</button>
+                <button id="btnInvert" class="action-btn btn-secondary py-4" style="flex: 1;">파형 반전</button>
+                <button id="btnReset" class="action-btn btn-secondary py-4" style="flex: 1;">초기화</button>
             </div>
             <div class="grid grid-cols-1 gap-4">
                 <div class="flex flex-col gap-1">
@@ -172,7 +173,7 @@
     <script>
         const state = {
             isTracking: false, speed: 3, smoothing: 0.90, amplitude: 1.0, 
-            useVoice: true, lastSpokenPhase: -1, roi: null,
+            useVoice: true, lastSpokenPhase: -1, inverted: false, roi: null,
             targetWave: 0.5, currentPhase: 0, theme: 'dark',
             config: { inhale: 4.0, hold: 2.0, exhale: 4.0, prepare: 1.0 },
             smoothed: { y: 0.5 }, frameCount: 0, phaseStartTime: 0,
@@ -181,7 +182,7 @@
 
         const dom = {
             video: document.getElementById('video'), overlay: document.getElementById('overlay'), pCanvas: document.getElementById('pCanvas'),
-            btnStart: document.getElementById('btnStart'), btnReset: document.getElementById('btnReset'),
+            btnStart: document.getElementById('btnStart'), btnReset: document.getElementById('btnReset'), btnInvert: document.getElementById('btnInvert'),
             circle: document.getElementById('circle'), pLabel: document.getElementById('phaseLabel'),
             inIn: document.getElementById('inhaleTime'), inH: document.getElementById('holdTime'), inEx: document.getElementById('exhaleTime'), inPr: document.getElementById('prepareTime'),
             valA: document.getElementById('valA'), inA: document.getElementById('inputA')
@@ -303,7 +304,9 @@
             }
 
             // v14.0: APPLY AMPLITUDE SCALING (Scale around 0.5 baseline)
-            state.targetWave = 0.5 + (wave - 0.5) * state.amplitude;
+            // v21.0: Support Phase Inversion
+            const multiplier = state.inverted ? -1 : 1;
+            state.targetWave = 0.5 + (wave - 0.5) * state.amplitude * multiplier;
 
             dom.circle.style.backgroundColor = c;
             dom.circle.innerText = t;
@@ -364,8 +367,10 @@
                     const midR = (maxR + minR) / 2;
 
                     // Manual Guideline Logic
-                    const goalTop = 0.5 + (0.5 * state.amplitude);
-                    const goalBottom = 0.5 - (0.5 * state.amplitude);
+                    // v21.0: Guidelines also follow inversion
+                    const multiplier = state.inverted ? -1 : 1;
+                    const goalTop = 0.5 + (0.5 * state.amplitude * multiplier);
+                    const goalBottom = 0.5 - (0.5 * state.amplitude * multiplier);
 
                     // Unified Scaling (Natural Proportion)
                     const normalizedActual = (actualVal - midR) / REF_SCALE + 0.5;
@@ -406,6 +411,10 @@
         const SmoothingAlpha = () => 1 - state.smoothing;
         dom.btnStart.onclick = () => state.isTracking ? stop() : start();
         dom.btnReset.onclick = () => { state.roi = null; };
+        dom.btnInvert.onclick = () => { 
+            state.inverted = !state.inverted; 
+            dom.btnInvert.classList.toggle('text-primary', state.inverted);
+        };
         dom.inA.oninput = (e) => { 
             state.amplitude = e.target.value/100; 
             dom.valA.innerText = state.amplitude.toFixed(2); 
