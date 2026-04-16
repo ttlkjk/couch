@@ -154,7 +154,6 @@
             <div class="flex gap-2 mb-4">
                 <button id="btnStart" class="action-btn btn-primary py-4" style="flex: 2;">세션 시작</button>
                 <button id="btnInvert" class="action-btn btn-secondary py-4" style="flex: 1;">파형 반전</button>
-                <button id="btnReset" class="action-btn btn-secondary py-4" style="flex: 1;">초기화</button>
             </div>
             <div class="grid grid-cols-1 gap-4">
                 <div class="flex flex-col gap-1">
@@ -182,7 +181,7 @@
 
         const dom = {
             video: document.getElementById('video'), overlay: document.getElementById('overlay'), pCanvas: document.getElementById('pCanvas'),
-            btnStart: document.getElementById('btnStart'), btnReset: document.getElementById('btnReset'), btnInvert: document.getElementById('btnInvert'),
+            btnStart: document.getElementById('btnStart'), btnInvert: document.getElementById('btnInvert'),
             circle: document.getElementById('circle'), pLabel: document.getElementById('phaseLabel'),
             inIn: document.getElementById('inhaleTime'), inH: document.getElementById('holdTime'), inEx: document.getElementById('exhaleTime'), inPr: document.getElementById('prepareTime'),
             valA: document.getElementById('valA'), inA: document.getElementById('inputA')
@@ -410,11 +409,6 @@
 
         const SmoothingAlpha = () => 1 - state.smoothing;
         dom.btnStart.onclick = () => state.isTracking ? stop() : start();
-        dom.btnReset.onclick = () => { 
-            state.roi = null; 
-            state.actualHistory.fill(0.5); // Clear history memory for instant recalibration
-            vibrate([50]);
-        };
         dom.btnInvert.onclick = () => { 
             state.inverted = !state.inverted; 
             dom.btnInvert.classList.toggle('text-primary', state.inverted);
