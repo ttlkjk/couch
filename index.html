@@ -411,7 +411,16 @@
         dom.btnStart.onclick = () => state.isTracking ? stop() : start();
         dom.btnInvert.onclick = () => { 
             state.inverted = !state.inverted; 
-            dom.btnInvert.classList.toggle('text-primary', state.inverted);
+            if (state.inverted) {
+                dom.btnInvert.style.background = "var(--primary)";
+                dom.btnInvert.style.color = "#000";
+                dom.btnInvert.style.boxShadow = "0 0 20px var(--primary)";
+            } else {
+                dom.btnInvert.style.background = "rgba(255,255,255,0.05)";
+                dom.btnInvert.style.color = "var(--text)";
+                dom.btnInvert.style.boxShadow = "none";
+            }
+            vibrate([40]); // Tactile feedback
         };
         dom.inA.oninput = (e) => { 
             state.amplitude = e.target.value/100; 
