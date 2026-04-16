@@ -410,7 +410,11 @@
 
         const SmoothingAlpha = () => 1 - state.smoothing;
         dom.btnStart.onclick = () => state.isTracking ? stop() : start();
-        dom.btnReset.onclick = () => { state.roi = null; };
+        dom.btnReset.onclick = () => { 
+            state.roi = null; 
+            state.actualHistory.fill(0.5); // Clear history memory for instant recalibration
+            vibrate([50]);
+        };
         dom.btnInvert.onclick = () => { 
             state.inverted = !state.inverted; 
             dom.btnInvert.classList.toggle('text-primary', state.inverted);
