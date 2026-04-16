@@ -151,11 +151,7 @@
 
         <!-- System Controls -->
         <div id="controls">
-            <div class="flex gap-2 mb-4">
-                <button id="btnStart" class="action-btn btn-primary py-4" style="flex: 2;">세션 시작</button>
-                <button id="btnInvert" class="action-btn btn-secondary py-4" style="flex: 1;">파형 반전</button>
-            </div>
-            <div class="grid grid-cols-1 gap-4">
+            <div class="grid grid-cols-1 gap-4 mb-4">
                 <div class="flex flex-col gap-1">
                     <div class="flex justify-between text-[10px] font-black uppercase text-slate-500">
                         <span>목표 진폭 <span class="opacity-30">(AMP)</span></span>
@@ -163,6 +159,10 @@
                     </div>
                     <input type="range" id="inputA" min="10" max="150" value="100">
                 </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="btnStart" class="action-btn btn-primary py-4" style="flex: 2;">세션 시작</button>
+                <button id="btnInvert" class="action-btn btn-secondary py-4" style="flex: 1;">파형 반전</button>
             </div>
         </div>
     </div>
